@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# PyInstaller artifacts
+build/
+dist/
+
+# Database — contains personal data, never commit
+momentum.db
+
+# Claude Code personal settings
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
