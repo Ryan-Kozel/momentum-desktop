@@ -149,6 +149,29 @@ CREATE TABLE IF NOT EXISTS savings_accounts (
     created_at       TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS investment_accounts (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL,
+    name       TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS investment_holdings (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id      INTEGER NOT NULL,
+    ticker          TEXT NOT NULL,
+    fund_name       TEXT,
+    shares          REAL NOT NULL,
+    amount_invested REAL NOT NULL,
+    created_at      TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id) REFERENCES investment_accounts(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_inv_accounts_user    ON investment_accounts(user_id);
+CREATE INDEX IF NOT EXISTS idx_inv_holdings_account ON investment_holdings(account_id);
 """
 
 DEFAULT_CHECKLIST = ["Make Bed", "Code", "Read", "Move Body", "Brush Teeth 2x"]
@@ -775,3 +798,82 @@ def delete_account(acct_id: int, user_id: int) -> None:
             "DELETE FROM savings_accounts WHERE id = ? AND user_id = ?",
             (acct_id, user_id),
         )
+
+
+# ---------- investment account queries ----------
+
+def list_investment_accounts(user_id: int) -> list[dict]:
+    with get_conn() as c:
+        rows = c.execute(
+            "SELECT id, name, sort_order FROM investment_accounts WHERE user_id = ? ORDER BY sort_order, id",
+            (user_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def add_investment_account(user_id: int, name: str) -> int:
+    with get_conn() as c:
+        max_order = c.execute(
+            "SELECT COALESCE(MAX(sort_order), -1) FROM investment_accounts WHERE user_id = ?",
+            (user_id,),
+        ).fetchone()[0]
+        cur = c.execute(
+            "INSERT INTO investment_accounts (user_id, name, sort_order) VALUES (?, ?, ?)",
+            (user_id, name, max_order + 1),
+        )
+        return cur.lastrowid
+
+
+def update_investment_account(acct_id: int, user_id: int, name: str) -> None:
+    with get_conn() as c:
+        c.execute(
+            "UPDATE investment_accounts SET name = ? WHERE id = ? AND user_id = ?",
+            (name, acct_id, user_id),
+        )
+
+
+def delete_investment_account(acct_id: int, user_id: int) -> None:
+    with get_conn() as c:
+        c.execute(
+            "DELETE FROM investment_accounts WHERE id = ? AND user_id = ?",
+            (acct_id, user_id),
+        )
+
+
+# ---------- investment holding queries ----------
+
+def list_investment_holdings(account_id: int) -> list[dict]:
+    with get_conn() as c:
+        rows = c.execute(
+            """SELECT id, account_id, ticker, fund_name, shares, amount_invested
+               FROM investment_holdings WHERE account_id = ? ORDER BY id""",
+            (account_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def add_investment_holding(account_id: int, ticker: str, fund_name: str | None,
+                           shares: float, amount_invested: float) -> int:
+    with get_conn() as c:
+        cur = c.execute(
+            """INSERT INTO investment_holdings (account_id, ticker, fund_name, shares, amount_invested)
+               VALUES (?, ?, ?, ?, ?)""",
+            (account_id, ticker.upper(), fund_name, shares, amount_invested),
+        )
+        return cur.lastrowid
+
+
+def update_investment_holding(holding_id: int, ticker: str, fund_name: str | None,
+                              shares: float, amount_invested: float) -> None:
+    with get_conn() as c:
+        c.execute(
+            """UPDATE investment_holdings
+               SET ticker = ?, fund_name = ?, shares = ?, amount_invested = ?
+               WHERE id = ?""",
+            (ticker.upper(), fund_name, shares, amount_invested, holding_id),
+        )
+
+
+def delete_investment_holding(holding_id: int) -> None:
+    with get_conn() as c:
+        c.execute("DELETE FROM investment_holdings WHERE id = ?", (holding_id,))

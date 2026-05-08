@@ -8,6 +8,7 @@ from views.budget_view import BudgetView
 from views.calendar_view import CalendarView
 from views.charts_view import ChartsView
 from views.goals_view import GoalsView
+from views.investments_view import InvestmentsView
 from views.jobs_view import JobsView
 from views.settings_view import SettingsView
 
@@ -35,7 +36,7 @@ class AppView(ctk.CTkFrame):
         # Sidebar
         self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
         self.sidebar.grid(row=0, column=0, sticky="nsw")
-        self.sidebar.grid_rowconfigure(8, weight=1)
+        self.sidebar.grid_rowconfigure(9, weight=1)
 
         ctk.CTkLabel(
             self.sidebar, text="Momentum",
@@ -47,7 +48,7 @@ class AppView(ctk.CTkFrame):
             text_color=("gray40", "gray60"),
         ).grid(row=1, column=0, padx=20, pady=(0, 20), sticky="w")
 
-        for i, name in enumerate(["Calendar", "Goals", "Jobs", "Budget", "Stats", "Settings"], start=2):
+        for i, name in enumerate(["Calendar", "Goals", "Jobs", "Budget", "Investments", "Stats", "Settings"], start=2):
             btn = ctk.CTkButton(
                 self.sidebar, text=name, anchor="w", height=40,
                 corner_radius=8, fg_color="transparent",
@@ -92,6 +93,8 @@ class AppView(ctk.CTkFrame):
             self.current_view = JobsView(self.content, self.user_id)
         elif name == "Budget":
             self.current_view = BudgetView(self.content, self.user_id)
+        elif name == "Investments":
+            self.current_view = InvestmentsView(self.content, self.user_id)
         elif name == "Stats":
             self.current_view = ChartsView(self.content, self.user_id)
         elif name == "Settings":

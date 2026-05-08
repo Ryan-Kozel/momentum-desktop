@@ -38,7 +38,7 @@ class ChartsView(ctk.CTkFrame):
         self.chart_frame = ctk.CTkFrame(self, corner_radius=12)
         self.chart_frame.grid(row=1, column=0, sticky="nsew")
 
-        self._canvas = None
+        self._mpl_canvas = None
         self._render("Weight")
 
     def _render(self, metric: str):
@@ -96,9 +96,9 @@ class ChartsView(ctk.CTkFrame):
         fig.autofmt_xdate()
         fig.tight_layout()
 
-        self._canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
-        self._canvas.draw()
-        self._canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+        self._mpl_canvas = FigureCanvasTkAgg(fig, master=self.chart_frame)
+        self._mpl_canvas.draw()
+        self._mpl_canvas.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
 
         # summary stats strip
         stats = ctk.CTkFrame(self.chart_frame, fg_color="transparent")
