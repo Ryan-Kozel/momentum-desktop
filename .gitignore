@@ -15,6 +15,7 @@ momentum.db
 
 # Claude Code personal settings
 .claude/settings.local.json
+Claude.md
 
 # OS
 .DS_Store
